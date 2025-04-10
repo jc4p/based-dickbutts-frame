@@ -116,3 +116,30 @@
   color: #e74c3c;
   border: 1px solid #e74c3c;
 }
+
+.linksContainer {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.separator {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.webLink {
+  margin-top: var(--spacing-xs);
+}
+
+.webLink a {
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.webLink a:hover {
+  color: var(--primary-dark);
+}

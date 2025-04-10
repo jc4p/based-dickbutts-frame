@@ -3,6 +3,10 @@ import * as frame from '@farcaster/frame-sdk'
 export async function initializeFrame() {
   const context = await frame.sdk.context
 
+  if (!context) {
+    return
+  }
+
   let user = context.user
 
   if (user.user) {

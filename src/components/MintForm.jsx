@@ -5,7 +5,7 @@ import styles from './MintForm.module.css';
 import * as frame from '@farcaster/frame-sdk';
 
 // Mint price in ETH
-const MINT_PRICE = 0.003;
+const MINT_PRICE = 0.0033;
 
 // Status message types
 const STATUS_TYPES = {
@@ -193,14 +193,14 @@ export function MintForm() {
           id="quantity"
           name="quantity"
           min="1"
-          max="10"
+          max="2000"
           value={quantity}
           onChange={handleSliderChange}
           className={styles.slider}
         />
         <div className={styles.sliderValues}>
           <span>1</span>
-          <span>10</span>
+          <span>2000</span>
         </div>
       </div>
       
@@ -217,6 +217,21 @@ export function MintForm() {
           {status.message}
         </div>
       )}
+      
+      <div className={styles.linksContainer}>
+        <div className={styles.webLink}>
+          <a onClick={() => frame.sdk.openUrl('https://www.scatter.art/collection/based-interns')}>Mint on web</a>
+        </div>
+        <span className={styles.separator}>•</span>
+        <div className={styles.webLink}>
+          <a onClick={() => {
+            const targetText = 'Checkout Based Interns, a new NFT collection by @xexcy';
+            const targetURL = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+            const finalUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(targetText)}&embeds[]=${encodeURIComponent(targetURL)}`;
+            frame.sdk.openUrl(finalUrl);
+          }}>Share</a>
+        </div>
+      </div>
     </div>
   );
 }
