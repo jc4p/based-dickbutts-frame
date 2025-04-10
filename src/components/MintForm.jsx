@@ -129,7 +129,7 @@ export function MintForm() {
         // signature data (0x00)
         '0000000000000000000000000000000000000000000000000000000000000000';
       
-      console.log(`Minting ${quantity} NFTs for ${totalPrice.toFixed(3)} ETH...`);
+      console.log(`Minting ${quantity} NFTs for ${totalPrice.toFixed(4)} ETH...`);
       
       setStatus({
         type: STATUS_TYPES.LOADING,
@@ -193,14 +193,14 @@ export function MintForm() {
           id="quantity"
           name="quantity"
           min="1"
-          max="2000"
+          max="10"
           value={quantity}
           onChange={handleSliderChange}
           className={styles.slider}
         />
         <div className={styles.sliderValues}>
           <span>1</span>
-          <span>2000</span>
+          <span>10</span>
         </div>
       </div>
       
@@ -209,7 +209,7 @@ export function MintForm() {
         onClick={handleMint}
         disabled={isMinting}
       >
-        {isMinting ? 'Minting...' : `Mint - ${(MINT_PRICE * quantity).toFixed(3)} ETH`}
+        {isMinting ? 'Minting...' : `Mint - ${(MINT_PRICE * quantity).toFixed(4)} ETH`}
       </button>
       
       {status.type !== STATUS_TYPES.NONE && (
