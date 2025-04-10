@@ -21,6 +21,31 @@ export function MintForm() {
   const [status, setStatus] = useState({ type: STATUS_TYPES.NONE, message: '' });
   const sliderRef = useRef(null);
 
+  const handleOpenUrl = (urlAsString) => {
+    try {
+      // Try with string parameter first
+      frame.sdk.actions.openUrl(urlAsString);
+    } catch (error) {
+      try {
+        // If string parameter fails, try with object parameter
+        frame.sdk.actions.openUrl({ url: urlAsString });
+      } catch (secondError) {
+        console.error('Failed to open URL:', secondError);
+      }
+    }
+  };
+
+  const handleOpenMintWebsite = () => {
+    handleOpenUrl('https://www.scatter.art/collection/based-interns');
+  };
+
+  const handleShareOnWarpcast = () => {
+    const targetText = 'Checkout Based Interns, a new NFT collection by @xexcy';
+    const targetURL = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    const finalUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(targetText)}&embeds[]=${encodeURIComponent(targetURL)}`;
+    handleOpenUrl(finalUrl);
+  };
+
   const handleSliderChange = (e) => {
     setQuantity(parseInt(e.target.value, 10));
     updateSliderFill();
@@ -220,16 +245,11 @@ export function MintForm() {
       
       <div className={styles.linksContainer}>
         <div className={styles.webLink}>
-          <a onClick={() => frame.sdk.openUrl('https://www.scatter.art/collection/based-interns')}>Mint on web</a>
+          <a onClick={handleOpenMintWebsite}>Mint on web</a>
         </div>
         <span className={styles.separator}>•</span>
         <div className={styles.webLink}>
-          <a onClick={() => {
-            const targetText = 'Checkout Based Interns, a new NFT collection by @xexcy';
-            const targetURL = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-            const finalUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(targetText)}&embeds[]=${encodeURIComponent(targetURL)}`;
-            frame.sdk.openUrl(finalUrl);
-          }}>Share</a>
+          <a onClick={handleShareOnWarpcast}>Share</a>
         </div>
       </div>
     </div>
