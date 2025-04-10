@@ -1,0 +1,13 @@
+.collectionDisplay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.collectionImage {
+  border-radius: 12px;
+  max-width: 100%;
+  height: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}

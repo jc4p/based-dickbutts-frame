@@ -1,0 +1,118 @@
+.mintForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  width: 100%;
+  max-width: 300px;
+}
+
+.quantitySelector {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: var(--spacing-sm);
+}
+
+.quantitySelector label {
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: var(--spacing-xs);
+}
+
+.slider {
+  width: 100%;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--disabled);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  border: none;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: var(--primary-dark);
+}
+
+.slider::-moz-range-thumb:hover {
+  background: var(--primary-dark);
+}
+
+.sliderValues {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.mintButton {
+  width: 100%;
+  padding: 12px 24px;
+  background-color: var(--primary);
+  color: var(--background);
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.mintButton:hover {
+  background-color: var(--primary-dark);
+}
+
+.mintButton:disabled {
+  background-color: var(--disabled);
+  cursor: not-allowed;
+}
+
+.statusMessage {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.loading {
+  background-color: rgba(0, 112, 243, 0.1);
+  color: var(--primary);
+  border: 1px solid var(--primary-light);
+}
+
+.success {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: #2ecc71;
+  border: 1px solid #2ecc71;
+}
+
+.error {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+}
