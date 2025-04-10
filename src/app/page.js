@@ -8,15 +8,15 @@ export const metadata = {
   other: {
     'fc:frame': JSON.stringify({
       version: "next",
-      imageUrl: "https://yourdomain.com/collection-banner.png",
+      imageUrl: `${process.env.NEXT_PUBLIC_APP_URL}/collection-banner.png`,
       button: {
-        title: "Mint Now!",
+        title: "Mint Yours Now!",
         action: {
           type: "launch_frame",
-          name: "mint-frame",
-          url: "https://yourdomain.com", // Replace with your actual domain
-          splashImageUrl: "https://yourdomain.com/collection-square.gif",
-          splashBackgroundColor: "#000000"
+          name: "Based Interns",
+          url: `${process.env.NEXT_PUBLIC_APP_URL}`,
+          splashImageUrl: `${process.env.NEXT_PUBLIC_APP_URL}/collection-square.gif`,
+          splashBackgroundColor: "#FFFFFF"
         }
       }
     })
