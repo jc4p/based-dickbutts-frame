@@ -135,24 +135,25 @@ export function MintForm() {
       
       // Construct the data field with all parameters
       // This is a simplified approach - normally you would use a library for proper ABI encoding
-      const data = 
-        mintFunctionSignature + 
-        // auth.key (32 bytes/64 chars)
+      const data =
+        mintFunctionSignature +
+        // auth.key (32 bytes)
         '0000000000000000000000000000000000000000000000000000000000000000' +
-        // Placeholder for auth.proof array offset (32 bytes/64 chars) - pointing to empty array
+        // offset to auth.proof (160 bytes => 0xa0)
         '00000000000000000000000000000000000000000000000000000000000000a0' +
-        // quantity (32 bytes/64 chars)
+        // quantity (uint256, padded to 32 bytes)
         quantityHex.padStart(64, '0') +
-        // affiliate address (32 bytes/64 chars) - zero address
+        // affiliate address (zero address)
         '0000000000000000000000000000000000000000000000000000000000000000' +
-        // Placeholder for signature offset (32 bytes/64 chars) - pointing to signature
-        '00000000000000000000000000000000000000000000000000000000000000e0' +
-        // auth.proof array length (0)
+        // offset to signature (192 bytes => 0xc0, because proof is empty, proof offset + 32 bytes length = 0xa0+0x20 = 0xc0)
+        '00000000000000000000000000000000000000000000000000000000000000c0' +
+        // auth.proof length (0)
         '0000000000000000000000000000000000000000000000000000000000000000' +
         // signature length (1 byte)
         '0000000000000000000000000000000000000000000000000000000000000001' +
-        // signature data (0x00)
+        // signature byte data (1 byte 0x00 padded)
         '0000000000000000000000000000000000000000000000000000000000000000';
+
       
       console.log(`Minting ${quantity} NFTs for ${totalPrice.toFixed(4)} ETH...`);
       
