@@ -145,23 +145,18 @@ export function MintForm() {
         '0000000000000000000000000000000000000000000000000000000000000000' +
         // offset to signature (0xe0)
         '00000000000000000000000000000000000000000000000000000000000000e0' +
-
         // --- auth tuple data (starting at 0x80) ---
         // auth.key
         '0000000000000000000000000000000000000000000000000000000000000000' +
         // offset to auth.proof array (0x40 bytes relative to auth tuple start, meaning at 0xc0 overall)
         '0000000000000000000000000000000000000000000000000000000000000040' +
-
         // auth.proof array length (empty array, length = 0)
         '0000000000000000000000000000000000000000000000000000000000000000' +
-
         // --- signature data (starting at 0xe0) ---
         // signature length (1 byte)
         '0000000000000000000000000000000000000000000000000000000000000001' +
         // signature byte data (0x00 padded to 32 bytes)
         '0000000000000000000000000000000000000000000000000000000000000000';
-
-
       
       console.log(`Minting ${quantity} NFTs for ${totalPrice.toFixed(4)} ETH...`);
       
