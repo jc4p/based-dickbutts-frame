@@ -5,7 +5,7 @@
   justify-content: flex-start;
   min-height: 100vh;
   padding: var(--spacing-md);
-  padding-top: 0 !important;
+  padding-top: 10px !important;
   max-width: 600px;
   margin: 0 auto;
 }
