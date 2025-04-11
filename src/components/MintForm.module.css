@@ -121,7 +121,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  margin-top: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
 }
 
 .separator {
@@ -142,4 +142,29 @@
 
 .webLink a:hover {
   color: var(--primary-dark);
+}
+
+.divider {
+  width: 100%;
+  border: none;
+  height: 1px;
+  background-color: var(--secondary);
+  margin: var(--spacing-xs) 0;
+}
+
+.shareButton {
+  width: 100%;
+  padding: 12px 24px;
+  background-color: #6442BF;
+  color: var(--background);
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.shareButton:hover {
+  background-color: #5339a3;
 }

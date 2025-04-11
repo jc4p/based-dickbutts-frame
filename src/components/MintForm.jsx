@@ -247,13 +247,18 @@ export function MintForm() {
         </div>
       )}
       
+      <hr className={styles.divider} />
+      
+      <button 
+        className={styles.shareButton} 
+        onClick={handleShareOnWarpcast}
+      >
+        Share
+      </button>
+      
       <div className={styles.linksContainer}>
         <div className={styles.webLink}>
           <a onClick={handleOpenMintWebsite}>Mint on web</a>
-        </div>
-        <span className={styles.separator}>•</span>
-        <div className={styles.webLink}>
-          <a onClick={handleShareOnWarpcast}>Share</a>
         </div>
       </div>
     </div>
