@@ -33,22 +33,6 @@
   --transition-normal: 0.3s;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #0099ff;
-    --primary-dark: #0072cc;
-    --primary-light: #99d6ff;
-    --secondary: #1f1f1f;
-    --accent: #ff4081;
-    --accent-dark: #c60055;
-    --disabled: #555555;
-    --text-primary: #ededed;
-    --text-secondary: #a0a0a0;
-  }
-}
-
 html,
 body {
   max-width: 100vw;
@@ -76,10 +60,4 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
 }
