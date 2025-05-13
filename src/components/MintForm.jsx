@@ -311,7 +311,7 @@ export function MintForm() {
           {isMinting ? 'Minting...' : 
            isLoadingPrice ? 'Loading...' :
            mintType === 'free' ? `Mint - Free` :
-           `Mint - ${(DEFAULT_MINT_PRICE * quantity).toFixed(4)} ETH`}
+           `Mint - ${Number(DEFAULT_MINT_PRICE * quantity).toFixed(4).replace(/\.?0+$/, '')} ETH`}
         </button>
         
         {status.type !== STATUS_TYPES.NONE && (
