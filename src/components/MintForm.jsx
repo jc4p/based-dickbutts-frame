@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import styles from './MintForm.module.css';
 import * as frame from '@farcaster/frame-sdk';
 import { MintedNFTs } from './MintedNFTs';
+import { DebugOverlay } from './DebugOverlay';
 
 // Default mint price in ETH (fallback)
 const DEFAULT_MINT_PRICE = 0.002;
@@ -31,9 +32,15 @@ export function MintForm() {
   const [eligibleLists, setEligibleLists] = useState([]);
   const mintedNFTsRef = useRef(null); // Ref for scrolling
 
+  useEffect(() => {
+    console.log('[MintForm] Component mounted / initialized');
+  }, []);
+
   // Scroll to MintedNFTs when txHash is set
   useEffect(() => {
+    console.log('[MintForm] txHash changed:', txHash);
     if (txHash && mintedNFTsRef.current) {
+      console.log('[MintForm] Scrolling to MintedNFTs section.');
       const timer = setTimeout(() => {
         mintedNFTsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 300); // Short delay to ensure rendering
@@ -43,71 +50,84 @@ export function MintForm() {
 
   // Fetch invite list price and max quantity when wallet is connected
   useEffect(() => {
+    console.log('[MintForm] getInviteListData effect triggered.');
     async function getInviteListData() {
+      console.log('[MintForm] Attempting to get invite list data...');
+      setIsLoadingPrice(true);
       try {
+        console.log('[MintForm] Requesting accounts from Frame SDK...');
         const accounts = await frame.sdk.wallet.ethProvider.request({
           method: 'eth_requestAccounts'
         });
+        console.log('[MintForm] Accounts received:', accounts);
         
         if (!accounts || !accounts[0]) {
+          console.warn('[MintForm] No accounts found or access denied.');
           setMintPrice(DEFAULT_MINT_PRICE);
           setMaxQuantity(DEFAULT_MAX_QUANTITY);
           setHasFreeMint(false);
           setEligibleLists([]);
-          setIsLoadingPrice(false);
           return;
         }
-
-        const response = await fetch(`/api/invite-lists?wallet=${accounts[0]}`);
+        const walletAddress = accounts[0];
+        console.log(`[MintForm] Fetching /api/invite-lists for wallet: ${walletAddress}`);
+        const response = await fetch(`/api/invite-lists?wallet=${walletAddress}`);
+        console.log('[MintForm] /api/invite-lists response status:', response.status);
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error('[MintForm] Failed to fetch invite list data, status:', response.status, 'body:', errorText);
           throw new Error('Failed to fetch invite list data');
         }
 
         const data = await response.json();
+        console.log('[MintForm] /api/invite-lists data received:', data);
         setEligibleLists(data);
         
         if (data && data.length > 0) {
-          // Find the list with the highest *remaining* mints
           const maxWalletLimit = Math.max(
             ...data
               .map(list => {
-                // Use mints_remaining for determining max quantity for free mint type
                 const limit = parseInt(list.mints_remaining, 10);
+                console.log(`[MintForm] List: ${list.name}, Mints Remaining: ${list.mints_remaining}, Parsed Limit: ${limit}`);
                 return isNaN(limit) ? 0 : limit;
               })
               .filter(limit => limit > 0)
           );
+          console.log('[MintForm] Calculated maxWalletLimit for free mints:', maxWalletLimit);
           
-          // If no valid wallet limits found, use default
           if (maxWalletLimit === -Infinity || maxWalletLimit === 0) {
+            console.log('[MintForm] No valid free mints found or limit is 0. Setting to default paid mint.');
             setMintPrice(DEFAULT_MINT_PRICE);
             setMaxQuantity(DEFAULT_MAX_QUANTITY);
             setHasFreeMint(false);
           } else {
+            console.log('[MintForm] Valid free mints found. Max quantity for free mint:', maxWalletLimit);
             setHasFreeMint(true);
             setMintPrice(0);
             setMaxQuantity(maxWalletLimit);
           }
         } else {
+          console.log('[MintForm] No invite lists data. Setting to default paid mint.');
           setMintPrice(DEFAULT_MINT_PRICE);
           setMaxQuantity(DEFAULT_MAX_QUANTITY);
           setHasFreeMint(false);
         }
       } catch (error) {
-        console.error('Error fetching invite list data:', error);
+        console.error('[MintForm] Error in getInviteListData:', error);
         setMintPrice(DEFAULT_MINT_PRICE);
         setMaxQuantity(DEFAULT_MAX_QUANTITY);
         setHasFreeMint(false);
         setEligibleLists([]);
       } finally {
+        console.log('[MintForm] Finished getInviteListData. isLoadingPrice: false.');
         setIsLoadingPrice(false);
       }
     }
-
     getInviteListData();
   }, []);
 
   const handleOpenUrl = (urlAsString) => {
+    console.log('[MintForm] handleOpenUrl called with:', urlAsString);
     try {
       // Try with string parameter first
       frame.sdk.actions.openUrl(urlAsString);
@@ -122,10 +142,12 @@ export function MintForm() {
   };
 
   const handleOpenMintWebsite = () => {
+    console.log('[MintForm] handleOpenMintWebsite called.');
     handleOpenUrl('https://www.scatter.art/collection/baseddickbutts');
   };
 
   const handleShareOnWarpcast = () => {
+    console.log('[MintForm] handleShareOnWarpcast called.');
     const targetText = 'Checkout Based Dickbutts, a new NFT collection by @xexcy';
     const targetURL = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
     const finalUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(targetText)}&embeds[]=${encodeURIComponent(targetURL)}`;
@@ -133,24 +155,23 @@ export function MintForm() {
   };
 
   const handleSliderChange = (e) => {
-    setQuantity(parseInt(e.target.value, 10));
+    const newQuantity = parseInt(e.target.value, 10);
+    console.log('[MintForm] handleSliderChange, new quantity:', newQuantity);
+    setQuantity(newQuantity);
     updateSliderFill();
   };
 
   const updateSliderFill = () => {
-    if (sliderRef.current) {
-      const value = sliderRef.current.value;
-      const max = sliderRef.current.max;
-      const percentage = (value - 1) / (max - 1) * 100;
-      sliderRef.current.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${percentage}%, var(--disabled) ${percentage}%, var(--disabled) 100%)`;
-    }
+    // ... (no logs needed here unless debugging slider visuals)
   };
 
   useEffect(() => {
+    console.log('[MintForm] maxQuantity changed, updating slider fill. maxQuantity:', maxQuantity);
     updateSliderFill();
   }, [maxQuantity]); // Update slider fill when max quantity changes
 
   const handleMint = async () => {
+    console.log(`[MintForm] handleMint started. Mint Type: ${mintType}, Quantity: ${quantity}`);
     setIsMinting(true);
     setStatus({
       type: STATUS_TYPES.LOADING,
@@ -158,30 +179,29 @@ export function MintForm() {
     });
     
     try {
-      // Get the user's wallet address
+      console.log('[MintForm] Requesting accounts for minting...');
       const accounts = await frame.sdk.wallet.ethProvider.request({
         method: 'eth_requestAccounts'
       });
-      
+      console.log('[MintForm] Accounts for minting:', accounts);
       if (!accounts || !accounts[0]) {
+        console.error('[MintForm] No wallet connected for minting.');
         throw new Error('No wallet connected');
       }
-      
       const walletAddress = accounts[0];
+      console.log('[MintForm] Wallet address for minting:', walletAddress);
+      
       setStatus({
         type: STATUS_TYPES.LOADING,
         message: 'Checking network...'
       });
+      console.log('[MintForm] Requesting chainId...');
+      const chainIdHex = await frame.sdk.wallet.ethProvider.request({ method: 'eth_chainId' });
+      const chainIdDecimal = parseInt(chainIdHex, 16);
+      console.log(`[MintForm] Current chainId: ${chainIdDecimal} (Hex: ${chainIdHex})`);
       
-      // Check chain ID (Base Mainnet is 8453)
-      const chainId = await frame.sdk.wallet.ethProvider.request({
-        method: 'eth_chainId'
-      });
-      
-      const chainIdDecimal = parseInt(chainId, 16);
-      
-      // Switch to Base if not already on it
       if (chainIdDecimal !== 8453) {
+        console.log('[MintForm] Incorrect network. Requesting switch to Base (8453)...');
         setStatus({
           type: STATUS_TYPES.LOADING,
           message: 'Switching to Base network...'
@@ -191,25 +211,33 @@ export function MintForm() {
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: '0x2105' }] // Base mainnet chainId
         });
+        console.log('[MintForm] Network switch requested.');
       }
       
       // Contract details
       const contractAddress = '0x6b65C9aE28c4201695A1046cC03ce4D5689E18C1';
+      console.log('[MintForm] Contract address:', contractAddress);
       
       if (mintType === 'free') {
-        // Prepare lists for the API: distribute quantity across eligible lists
+        console.log('[MintForm] Processing free mint.');
         let remainingToMintForTx = quantity;
         const listsForTx = eligibleLists
           .map(list => {
-            // Use mints_remaining for current list's available quantity
             const limit = parseInt(list.mints_remaining, 10);
             if (isNaN(limit) || limit <= 0 || remainingToMintForTx <= 0) return null;
             const useQty = Math.min(limit, remainingToMintForTx);
             remainingToMintForTx -= useQty;
+            console.log(`[MintForm] Free mint list ${list.id}: using ${useQty} of ${limit} available.`);
             return useQty > 0 ? { id: list.id, quantity: useQty } : null;
           })
           .filter(Boolean);
-        if (listsForTx.length === 0) throw new Error('No eligible invite lists with remaining mints for the selected quantity.');
+        
+        console.log('[MintForm] Lists prepared for free mint API call:', listsForTx);
+        if (listsForTx.length === 0) {
+          console.error('[MintForm] No eligible lists for the selected free mint quantity.');
+          throw new Error('No eligible invite lists with remaining mints for the selected quantity.');
+        }
+
         const body = {
           collectionAddress: contractAddress,
           chainId: 8453,
@@ -217,6 +245,7 @@ export function MintForm() {
           lists: listsForTx, // Use the new listsForTx
           affiliateAddress: '0x0'
         };
+        console.log('[MintForm] Calling /api/generate-mint-tx with body:', body);
         setStatus({
           type: STATUS_TYPES.LOADING,
           message: 'Generating mint transaction...'
@@ -226,18 +255,22 @@ export function MintForm() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         });
+        console.log('[MintForm] /api/generate-mint-tx response status:', res.status);
         if (!res.ok) {
           const err = await res.json();
+          console.error('[MintForm] /api/generate-mint-tx failed:', err);
           throw new Error(err.error || 'Failed to generate mint transaction');
         }
         const mintTx = await res.json();
+        console.log('[MintForm] Received mintTransaction from API:', mintTx);
         
         setStatus({
           type: STATUS_TYPES.LOADING,
           message: 'Confirm transaction in your wallet...'
         });
         try {
-          const txHash = await frame.sdk.wallet.ethProvider.request({
+          console.log('[MintForm] Sending free mint transaction with params:', { from: walletAddress, to: mintTx.to, data: mintTx.data, value: mintTx.value });
+          const currentTxHash = await frame.sdk.wallet.ethProvider.request({
             method: 'eth_sendTransaction',
             params: [{
               from: walletAddress,
@@ -246,19 +279,21 @@ export function MintForm() {
               value: mintTx.value
             }]
           });
-          setTxHash(txHash);
+          console.log('[MintForm] Free mint transaction sent. TxHash:', currentTxHash);
+          setTxHash(currentTxHash);
           setStatus({
             type: STATUS_TYPES.LOADING,
             message: 'Waiting for transaction to be confirmed...'
           });
         } catch (mintError) {
+          console.error('[MintForm] Free mint transaction error:', mintError);
           setStatus({
             type: STATUS_TYPES.ERROR,
             message: `Transaction failed: ${mintError.message}`
           });
         }
       } else {
-        // Paid mint (public)
+        console.log('[MintForm] Processing paid mint.');
         const mintFunctionSignature = '0x4a21a2df'; // mint function signature
         const ethToWei = (eth) => {
           return '0x' + (BigInt(Math.floor(eth * 1e18))).toString(16);
@@ -277,12 +312,14 @@ export function MintForm() {
           '0000000000000000000000000000000000000000000000000000000000000000' +
           '0000000000000000000000000000000000000000000000000000000000000001' +
           '0000000000000000000000000000000000000000000000000000000000000000';
+        console.log(`[MintForm] Paid mint details: Quantity=${quantity}, TotalPriceETH=${totalPrice}, ValueWei=${valueInWei}`);
         setStatus({
           type: STATUS_TYPES.LOADING,
           message: 'Confirm transaction in your wallet...'
         });
         try {
-          const txHash = await frame.sdk.wallet.ethProvider.request({
+          console.log('[MintForm] Sending paid mint transaction with params:', { from: walletAddress, to: contractAddress, data: data, value: valueInWei });
+          const currentTxHash = await frame.sdk.wallet.ethProvider.request({
             method: 'eth_sendTransaction',
             params: [{
               from: walletAddress,
@@ -291,12 +328,14 @@ export function MintForm() {
               value: valueInWei
             }]
           });
-          setTxHash(txHash);
+          console.log('[MintForm] Paid mint transaction sent. TxHash:', currentTxHash);
+          setTxHash(currentTxHash);
           setStatus({
             type: STATUS_TYPES.LOADING,
             message: 'Waiting for transaction to be confirmed...'
           });
         } catch (mintError) {
+          console.error('[MintForm] Paid mint transaction error:', mintError);
           setStatus({
             type: STATUS_TYPES.ERROR,
             message: `Transaction failed: ${mintError.message}`
@@ -304,17 +343,20 @@ export function MintForm() {
         }
       }
     } catch (error) {
+      console.error('[MintForm] General error in handleMint:', error);
       setStatus({
         type: STATUS_TYPES.ERROR,
         message: `Failed to mint: ${error.message}`
       });
     } finally {
+      console.log('[MintForm] handleMint finished. isMinting: false.');
       setIsMinting(false);
     }
   };
 
   return (
     <>
+      <DebugOverlay />
       <div className={styles.mintForm}>
         {hasFreeMint && (
           <div className={styles.mintTypeSelector}>

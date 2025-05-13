@@ -1,0 +1,136 @@
+.overlay {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  max-height: 40vh; /* Limit height */
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  font-family: monospace;
+  font-size: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #222;
+  border-bottom: 1px solid #444;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.actionButton {
+  background: #555;
+  color: #fff;
+  border: 1px solid #777;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.actionButton:hover {
+  background: #666;
+}
+
+.toggleButton {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(0, 122, 255, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.logContainer {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+.logEntry {
+  padding: 4px 0;
+  border-bottom: 1px dotted #333;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.logEntry:last-child {
+  border-bottom: none;
+}
+
+.timestamp {
+  color: #888;
+  flex-shrink: 0;
+}
+
+.logType {
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.logMessage {
+  white-space: pre-wrap; /* Wrap long lines */
+  word-break: break-all; /* Break long words */
+  margin: 0;
+  flex-grow: 1;
+}
+
+.log {
+  color: #eee;
+}
+
+.error {
+  color: #ff8080; /* Light red */
+}
+
+.error .logType {
+  color: #ff4d4d; /* Darker red for type */
+}
+
+.warn {
+  color: #ffd180; /* Light orange */
+}
+
+.warn .logType {
+  color: #ffa726; /* Darker orange for type */
+}
+
+.info {
+  color: #80d8ff; /* Light blue */
+}
+
+.info .logType {
+  color: #29b6f6; /* Darker blue for type */
+}
+
+.noLogs {
+  color: #777;
+  text-align: center;
+  padding: 16px;
+} 
