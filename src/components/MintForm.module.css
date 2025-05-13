@@ -197,3 +197,23 @@
   background: var(--primary);
   color: var(--background);
 }
+
+.webMintButton {
+  width: 100%;
+  padding: 12px 24px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 2px solid var(--primary);
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: var(--spacing-xs);
+}
+
+.webMintButton:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--primary);
+  border-color: var(--primary-dark);
+}

@@ -330,9 +330,13 @@ export function MintForm() {
         </button>
         
         <div className={styles.linksContainer}>
-          <div className={styles.webLink}>
-            <a onClick={handleOpenMintWebsite}>Mint on web</a>
-          </div>
+          <button 
+            className={styles.webMintButton}
+            onClick={handleOpenMintWebsite}
+            type="button"
+          >
+            Mint on web
+          </button>
         </div>
       </div>
 
