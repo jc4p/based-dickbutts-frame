@@ -7,7 +7,7 @@ import { MintedNFTs } from './MintedNFTs';
 
 // Default mint price in ETH (fallback)
 const DEFAULT_MINT_PRICE = 0.002;
-const DEFAULT_MAX_QUANTITY = 10;
+const DEFAULT_MAX_QUANTITY = 25;
 
 // Status message types
 const STATUS_TYPES = {
