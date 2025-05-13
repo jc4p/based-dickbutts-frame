@@ -47,43 +47,52 @@ export function MintedNFTs({ txHash }) {
     if (!txHash) return;
 
     async function fetchMintedNFTs() {
+      setLoading(true);
+      setError(null);
       try {
         const client = createPublicClient({
           chain: base,
-          transport: http()
+          transport: http(),
         });
 
-        // Wait for transaction to be mined
         const receipt = await client.waitForTransactionReceipt({ hash: txHash });
         
-        // Get Transfer events from the transaction
         const transferEvents = receipt.logs
           .filter(log => log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase())
           .map(log => {
             const parsedLog = parseEventLogs({
               abi: contractABI,
-              logs: [log]
+              logs: [log],
             })[0];
             return parsedLog.args;
           })
-          .filter(args => args.from === '0x0000000000000000000000000000000000000000'); // Only mints (from zero address)
+          .filter(args => args.from === '0x0000000000000000000000000000000000000000');
 
-        // Get token URIs for each minted NFT
         const nftPromises = transferEvents.map(async (event) => {
           const tokenId = event.tokenId;
-          const tokenURI = await client.readContract({
+          const metadataUri = await client.readContract({
             address: CONTRACT_ADDRESS,
             abi: contractABI,
             functionName: 'tokenURI',
-            args: [tokenId]
+            args: [tokenId],
           });
 
-          // Convert IPFS URI to HTTP if needed
-          const imageUrl = tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/');
+          // Fetch the JSON metadata
+          const metadataResponse = await fetch(metadataUri.replace('ipfs://', 'https://ipfs.io/ipfs/'));
+          if (!metadataResponse.ok) {
+            throw new Error(`Failed to fetch metadata for token ${tokenId} from ${metadataUri}`);
+          }
+          const metadata = await metadataResponse.json();
+
+          // Extract image URL and attributes
+          const imageUrl = metadata.image ? metadata.image.replace('ipfs://', 'https://ipfs.io/ipfs/') : '';
+          const attributes = metadata.attributes ? metadata.attributes.filter(attr => attr.value !== 'None' && attr.value !== null && attr.value !== '') : [];
           
           return {
             tokenId: tokenId.toString(),
-            imageUrl
+            imageUrl,
+            name: metadata.name || `NFT #${tokenId}`,
+            attributes,
           };
         });
 
@@ -118,24 +127,40 @@ export function MintedNFTs({ txHash }) {
       <div className={`${styles.grid} ${mintedNFTs.length === 1 ? styles.single : ''}`}>
         {mintedNFTs.map((nft) => (
           <div key={nft.tokenId} className={styles.nftCard}>
-            <Image
-              src={nft.imageUrl}
-              alt={`NFT #${nft.tokenId}`}
-              width={mintedNFTs.length === 1 ? 500 : 300}
-              height={mintedNFTs.length === 1 ? 500 : 300}
-              className={styles.nftImage}
-              unoptimized={true}
-            />
-            <p className={styles.tokenId}>Based Dickbutts #{nft.tokenId}</p>
+            {nft.imageUrl && (
+              <Image
+                src={nft.imageUrl}
+                alt={nft.name || `NFT #${nft.tokenId}`}
+                width={mintedNFTs.length === 1 ? 400 : 250}
+                height={mintedNFTs.length === 1 ? 400 : 250}
+                className={styles.nftImage}
+                unoptimized={true}
+              />
+            )}
+            <h3 className={styles.nftName}>{nft.name}</h3>
+            {nft.attributes && nft.attributes.length > 0 && (
+              <div className={styles.attributesContainer}>
+                <h4>Traits:</h4>
+                <ul className={styles.attributesList}>
+                  {nft.attributes.map((attr, index) => (
+                    <li key={index} className={styles.attributeItem}>
+                      <span className={styles.traitType}>{attr.trait_type}:</span> {attr.value}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ))}
       </div>
-      <button 
-        className={styles.shareButton} 
-        onClick={handleShareOnWarpcast}
-      >
-        Share
-      </button>
+      {mintedNFTs.length > 0 && (
+        <button 
+          className={styles.shareButton} 
+          onClick={handleShareOnWarpcast}
+        >
+          Share
+        </button>
+      )}
     </div>
   );
 } 
