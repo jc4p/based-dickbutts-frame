@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 // Contract address to check for mints
-const CONTRACT_ADDRESS = '0x744512b7d6d7cb36c417D7EC6CCcC53954eC103E';
+const CONTRACT_ADDRESS = '0x6b65C9aE28c4201695A1046cC03ce4D5689E18C1';
 
 // Function to get all mintees from Alchemy and their mint counts
 async function getMintees() {

@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from './MintForm.module.css';
 import * as frame from '@farcaster/frame-sdk';
+import { MintedNFTs } from './MintedNFTs';
 
-// Mint price in ETH
-const MINT_PRICE = 0.0033;
+// Default mint price in ETH (fallback)
+const DEFAULT_MINT_PRICE = 0.002;
+const DEFAULT_MAX_QUANTITY = 10;
 
 // Status message types
 const STATUS_TYPES = {
@@ -19,7 +21,68 @@ export function MintForm() {
   const [quantity, setQuantity] = useState(1);
   const [isMinting, setIsMinting] = useState(false);
   const [status, setStatus] = useState({ type: STATUS_TYPES.NONE, message: '' });
+  const [txHash, setTxHash] = useState(null);
+  const [mintPrice, setMintPrice] = useState(DEFAULT_MINT_PRICE);
+  const [isLoadingPrice, setIsLoadingPrice] = useState(true);
+  const [maxQuantity, setMaxQuantity] = useState(DEFAULT_MAX_QUANTITY);
   const sliderRef = useRef(null);
+
+  // Fetch invite list price and max quantity when wallet is connected
+  useEffect(() => {
+    async function getInviteListData() {
+      try {
+        const accounts = await frame.sdk.wallet.ethProvider.request({
+          method: 'eth_requestAccounts'
+        });
+        
+        if (!accounts || !accounts[0]) {
+          setMintPrice(DEFAULT_MINT_PRICE);
+          setMaxQuantity(DEFAULT_MAX_QUANTITY);
+          setIsLoadingPrice(false);
+          return;
+        }
+
+        const response = await fetch(`/api/invite-lists?wallet=${accounts[0]}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch invite list data');
+        }
+
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+          // Find the list with the highest wallet limit
+          const maxWalletLimit = Math.max(
+            ...data
+              .map(list => {
+                const limit = parseInt(list.wallet_limit, 10);
+                return isNaN(limit) ? 0 : limit;
+              })
+              .filter(limit => limit > 0)
+          );
+          
+          // If no valid wallet limits found, use default
+          if (maxWalletLimit === -Infinity || maxWalletLimit === 0) {
+            setMintPrice(DEFAULT_MINT_PRICE);
+            setMaxQuantity(DEFAULT_MAX_QUANTITY);
+          } else {
+            setMintPrice(0);
+            setMaxQuantity(maxWalletLimit);
+          }
+        } else {
+          setMintPrice(DEFAULT_MINT_PRICE);
+          setMaxQuantity(DEFAULT_MAX_QUANTITY);
+        }
+      } catch (error) {
+        console.error('Error fetching invite list data:', error);
+        setMintPrice(DEFAULT_MINT_PRICE);
+        setMaxQuantity(DEFAULT_MAX_QUANTITY);
+      } finally {
+        setIsLoadingPrice(false);
+      }
+    }
+
+    getInviteListData();
+  }, []);
 
   const handleOpenUrl = (urlAsString) => {
     try {
@@ -36,11 +99,11 @@ export function MintForm() {
   };
 
   const handleOpenMintWebsite = () => {
-    handleOpenUrl('https://www.scatter.art/collection/based-interns');
+    handleOpenUrl('https://www.scatter.art/collection/baseddickbutts');
   };
 
   const handleShareOnWarpcast = () => {
-    const targetText = 'Checkout Based Interns, a new NFT collection by @xexcy';
+    const targetText = 'Checkout Based Dickbutts, a new NFT collection by @xexcy';
     const targetURL = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
     const finalUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(targetText)}&embeds[]=${encodeURIComponent(targetURL)}`;
     handleOpenUrl(finalUrl);
@@ -62,7 +125,7 @@ export function MintForm() {
 
   useEffect(() => {
     updateSliderFill();
-  }, []);
+  }, [maxQuantity]); // Update slider fill when max quantity changes
 
   const handleMint = async () => {
     setIsMinting(true);
@@ -108,7 +171,7 @@ export function MintForm() {
       }
       
       // Contract details
-      const contractAddress = '0x744512b7d6d7cb36c417D7EC6CCcC53954eC103E';
+      const contractAddress = '0x6b65C9aE28c4201695A1046cC03ce4D5689E18C1';
       const mintFunctionSignature = '0x4a21a2df'; // mint function signature
       
       // Convert ETH to Wei for the transaction
@@ -117,45 +180,23 @@ export function MintForm() {
       };
       
       // Calculate the total price
-      const totalPrice = MINT_PRICE * quantity;
+      const totalPrice = mintPrice * quantity;
       const valueInWei = ethToWei(totalPrice);
       
       // Encode the function parameters
-      // Encoding format: function signature + encoded parameters
-      
-      // Parameters:
-      // 1. auth.key: 0x0000000000000000000000000000000000000000000000000000000000000000
-      // 2. auth.proof: [] (empty array)
-      // 3. quantity: user selected quantity
-      // 4. affiliate: 0x0000000000000000000000000000000000000000 (zero address)
-      // 5. signature: 0x00
-      
-      // Manually encode parameters for the mint function
       const quantityHex = quantity.toString(16).padStart(64, '0');
       
       // Construct the data field with all parameters
-      // This is a simplified approach - normally you would use a library for proper ABI encoding
       const data =
         mintFunctionSignature +
-        // offset to auth tuple (0x80)
         '0000000000000000000000000000000000000000000000000000000000000080' +
-        // quantity (uint256, padded)
         quantityHex.padStart(64, '0') +
-        // affiliate address (zero address)
         '0000000000000000000000000000000000000000000000000000000000000000' +
-        // offset to signature (0xe0)
         '00000000000000000000000000000000000000000000000000000000000000e0' +
-        // --- auth tuple data (starting at 0x80) ---
-        // auth.key
         '0000000000000000000000000000000000000000000000000000000000000000' +
-        // offset to auth.proof array (0x40 bytes relative to auth tuple start, meaning at 0xc0 overall)
         '0000000000000000000000000000000000000000000000000000000000000040' +
-        // auth.proof array length (empty array, length = 0)
         '0000000000000000000000000000000000000000000000000000000000000000' +
-        // --- signature data (starting at 0xe0) ---
-        // signature length (1 byte)
         '0000000000000000000000000000000000000000000000000000000000000001' +
-        // signature byte data (0x00 padded to 32 bytes)
         '0000000000000000000000000000000000000000000000000000000000000000';
       
       console.log(`Minting ${quantity} NFTs for ${totalPrice.toFixed(4)} ETH...`);
@@ -166,7 +207,6 @@ export function MintForm() {
       });
       
       try {
-        // Following the example in docs/FRAME_INTEGRATION.md
         const txHash = await frame.sdk.wallet.ethProvider.request({
           method: 'eth_sendTransaction',
           params: [{
@@ -178,6 +218,7 @@ export function MintForm() {
         });
         
         console.log('Transaction hash:', txHash);
+        setTxHash(txHash);
         
         const successMessage = quantity > 1 
           ? `Check your wallet in a few minutes for your new NFTs!` 
@@ -213,54 +254,64 @@ export function MintForm() {
   };
 
   return (
-    <div className={styles.mintForm}>
-      <div className={styles.quantitySelector}>
-        <label htmlFor="quantity">Quantity: {quantity}</label>
-        <input
-          ref={sliderRef}
-          type="range"
-          id="quantity"
-          name="quantity"
-          min="1"
-          max="10"
-          value={quantity}
-          onChange={handleSliderChange}
-          className={styles.slider}
-        />
-        <div className={styles.sliderValues}>
-          <span>1</span>
-          <span>10</span>
+    <>
+      <div className={styles.mintForm}>
+        {maxQuantity > 1 && (
+          <div className={styles.quantitySelector}>
+            <label htmlFor="quantity">Quantity: {quantity}</label>
+            <input
+              ref={sliderRef}
+              type="range"
+              id="quantity"
+              name="quantity"
+              min="1"
+              max={maxQuantity}
+              value={quantity}
+              onChange={handleSliderChange}
+              className={styles.slider}
+              disabled={isLoadingPrice}
+            />
+            <div className={styles.sliderValues}>
+              <span>1</span>
+              <span>{maxQuantity}</span>
+            </div>
+          </div>
+        )}
+        
+        <button 
+          className={styles.mintButton} 
+          onClick={handleMint}
+          disabled={isMinting || isLoadingPrice}
+        >
+          {isMinting ? 'Minting...' : 
+           isLoadingPrice ? 'Loading...' :
+           mintPrice === 0 ? `Mint - Free` :
+           `Mint - ${(mintPrice * quantity).toFixed(4)} ETH`}
+        </button>
+        
+        {status.type !== STATUS_TYPES.NONE && (
+          <div className={`${styles.statusMessage} ${styles[status.type]}`}>
+            {status.message}
+          </div>
+        )}
+        
+        <hr className={styles.divider} />
+        
+        <button 
+          className={styles.shareButton} 
+          onClick={handleShareOnWarpcast}
+        >
+          Share
+        </button>
+        
+        <div className={styles.linksContainer}>
+          <div className={styles.webLink}>
+            <a onClick={handleOpenMintWebsite}>Mint on web</a>
+          </div>
         </div>
       </div>
-      
-      <button 
-        className={styles.mintButton} 
-        onClick={handleMint}
-        disabled={isMinting}
-      >
-        {isMinting ? 'Minting...' : `Mint - ${(MINT_PRICE * quantity).toFixed(4)} ETH`}
-      </button>
-      
-      {status.type !== STATUS_TYPES.NONE && (
-        <div className={`${styles.statusMessage} ${styles[status.type]}`}>
-          {status.message}
-        </div>
-      )}
-      
-      <hr className={styles.divider} />
-      
-      <button 
-        className={styles.shareButton} 
-        onClick={handleShareOnWarpcast}
-      >
-        Share
-      </button>
-      
-      <div className={styles.linksContainer}>
-        <div className={styles.webLink}>
-          <a onClick={handleOpenMintWebsite}>Mint on web</a>
-        </div>
-      </div>
-    </div>
+
+      {txHash && <MintedNFTs txHash={txHash} />}
+    </>
   );
 }
