@@ -4,7 +4,7 @@ import { MintForm } from "@/components/MintForm";
 
 export const metadata = {
   title: 'Based Dickbutts',
-  description: 'Mint one of the 5000 Dickbutts on Base',
+  description: 'Mint one of the 5,200 Dickbutts on Base',
   other: {
     'fc:frame': JSON.stringify({
       version: "next",
@@ -28,7 +28,7 @@ export default function Page() {
     <div className={styles.container}>
       <main className={styles.main}>
         <h1 className={styles.title}>Based Dickbutts</h1>
-        <p className={styles.subtitle}>Mint one of the 5,000 Dickbutts on Base</p>
+        <p className={styles.subtitle}>Mint one of the 5,200 Dickbutts on Base</p>
         <CollectionDisplay />
         <MintForm />
       </main>
