@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import styles from './MintedNFTs.module.css';
-import { createPublicClient, http, parseAbiItem } from 'viem';
+import { createPublicClient, http, parseAbiItem, parseEventLogs } from 'viem';
 import { base } from 'viem/chains';
 import * as frame from '@farcaster/frame-sdk';
 
@@ -60,7 +60,7 @@ export function MintedNFTs({ txHash }) {
         const transferEvents = receipt.logs
           .filter(log => log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase())
           .map(log => {
-            const parsedLog = client.parseEventLogs({
+            const parsedLog = parseEventLogs({
               abi: contractABI,
               logs: [log]
             })[0];

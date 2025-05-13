@@ -29,6 +29,17 @@ export function MintForm() {
   const [mintType, setMintType] = useState('free'); // 'free' or 'paid'
   const sliderRef = useRef(null);
   const [eligibleLists, setEligibleLists] = useState([]);
+  const mintedNFTsRef = useRef(null); // Ref for scrolling
+
+  // Scroll to MintedNFTs when txHash is set
+  useEffect(() => {
+    if (txHash && mintedNFTsRef.current) {
+      const timer = setTimeout(() => {
+        mintedNFTsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300); // Short delay to ensure rendering
+      return () => clearTimeout(timer);
+    }
+  }, [txHash]);
 
   // Fetch invite list price and max quantity when wallet is connected
   useEffect(() => {
@@ -394,7 +405,9 @@ export function MintForm() {
         </div>
       </div>
 
-      {txHash && <MintedNFTs txHash={txHash} />}
+      <div ref={mintedNFTsRef}>
+        {txHash && <MintedNFTs txHash={txHash} />}
+      </div>
     </>
   );
 }
