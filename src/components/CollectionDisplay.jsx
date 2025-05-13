@@ -76,7 +76,7 @@ export function CollectionDisplay() {
               {whitelists.map((list) => (
                 <div key={list.id} className={styles.whitelistItem}>
                   <p>List: {list.name}</p>
-                  <p>Mints Remaining: {list.wallet_limit}</p>
+                  <p>Mints Remaining: {list.mints_remaining}</p>
                 </div>
               ))}
             </div>

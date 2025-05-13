@@ -67,11 +67,12 @@ export function MintForm() {
         setEligibleLists(data);
         
         if (data && data.length > 0) {
-          // Find the list with the highest wallet limit
+          // Find the list with the highest *remaining* mints
           const maxWalletLimit = Math.max(
             ...data
               .map(list => {
-                const limit = parseInt(list.wallet_limit, 10);
+                // Use mints_remaining for determining max quantity for free mint type
+                const limit = parseInt(list.mints_remaining, 10);
                 return isNaN(limit) ? 0 : limit;
               })
               .filter(limit => limit > 0)
@@ -197,22 +198,23 @@ export function MintForm() {
       
       if (mintType === 'free') {
         // Prepare lists for the API: distribute quantity across eligible lists
-        let remaining = quantity;
-        const lists = eligibleLists
+        let remainingToMintForTx = quantity;
+        const listsForTx = eligibleLists
           .map(list => {
-            const limit = parseInt(list.wallet_limit, 10);
-            if (isNaN(limit) || limit <= 0 || remaining <= 0) return null;
-            const useQty = Math.min(limit, remaining);
-            remaining -= useQty;
+            // Use mints_remaining for current list's available quantity
+            const limit = parseInt(list.mints_remaining, 10);
+            if (isNaN(limit) || limit <= 0 || remainingToMintForTx <= 0) return null;
+            const useQty = Math.min(limit, remainingToMintForTx);
+            remainingToMintForTx -= useQty;
             return useQty > 0 ? { id: list.id, quantity: useQty } : null;
           })
           .filter(Boolean);
-        if (lists.length === 0) throw new Error('No eligible invite lists for free mint');
+        if (listsForTx.length === 0) throw new Error('No eligible invite lists with remaining mints for the selected quantity.');
         const body = {
           collectionAddress: contractAddress,
           chainId: 8453,
           minterAddress: walletAddress,
-          lists,
+          lists: listsForTx, // Use the new listsForTx
           affiliateAddress: '0x0'
         };
         setStatus({
