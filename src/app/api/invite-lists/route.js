@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createPublicClient, http, parseAbiItem, zeroAddress } from 'viem';
+import { createPublicClient, http, parseAbiItem, stringToHex } from 'viem';
 import { base } from 'viem/chains';
 
 const COLLECTION_SLUG = 'baseddickbutts';
@@ -61,11 +61,13 @@ export async function GET(request) {
     const processedLists = await Promise.all(
       freeListsFromScatter.map(async (list) => {
         try {
+          const listIdAsBytes32 = stringToHex(list.id, { size: 32 });
+
           const numMintedOnContract = await publicClient.readContract({
             address: CONTRACT_ADDRESS,
             abi: contractABI,
             functionName: 'minted',
-            args: [walletAddress, list.id], // list.id is the bytes32 key
+            args: [walletAddress, listIdAsBytes32],
           });
           
           const walletLimit = parseInt(list.wallet_limit, 10);
@@ -78,18 +80,17 @@ export async function GET(request) {
 
           return {
             ...list,
-            wallet_limit: walletLimit, // Ensure wallet_limit is a number
+            wallet_limit: walletLimit,
             num_minted_on_contract: mintedCount,
             mints_remaining: mints_remaining,
           };
         } catch (contractError) {
-          console.error(`Error fetching minted count for list ${list.id}:`, contractError);
-          // Return list with error or default remaining count
+          console.error(`Error fetching minted count for list ${list.id} (converted to ${stringToHex(list.id, { size: 32 })}):`, contractError);
           return {
             ...list,
             wallet_limit: parseInt(list.wallet_limit, 10) || 0,
-            num_minted_on_contract: 0, // Or some error indicator
-            mints_remaining: parseInt(list.wallet_limit, 10) || 0, // Fallback to wallet_limit if contract call fails
+            num_minted_on_contract: 0,
+            mints_remaining: parseInt(list.wallet_limit, 10) || 0,
             contract_error: contractError.message
           };
         }
