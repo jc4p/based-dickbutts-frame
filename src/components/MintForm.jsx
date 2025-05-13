@@ -28,6 +28,7 @@ export function MintForm() {
   const [hasFreeMint, setHasFreeMint] = useState(false);
   const [mintType, setMintType] = useState('free'); // 'free' or 'paid'
   const sliderRef = useRef(null);
+  const [eligibleLists, setEligibleLists] = useState([]);
 
   // Fetch invite list price and max quantity when wallet is connected
   useEffect(() => {
@@ -41,6 +42,7 @@ export function MintForm() {
           setMintPrice(DEFAULT_MINT_PRICE);
           setMaxQuantity(DEFAULT_MAX_QUANTITY);
           setHasFreeMint(false);
+          setEligibleLists([]);
           setIsLoadingPrice(false);
           return;
         }
@@ -51,6 +53,7 @@ export function MintForm() {
         }
 
         const data = await response.json();
+        setEligibleLists(data);
         
         if (data && data.length > 0) {
           // Find the list with the highest wallet limit
@@ -83,6 +86,7 @@ export function MintForm() {
         setMintPrice(DEFAULT_MINT_PRICE);
         setMaxQuantity(DEFAULT_MAX_QUANTITY);
         setHasFreeMint(false);
+        setEligibleLists([]);
       } finally {
         setIsLoadingPrice(false);
       }
@@ -179,79 +183,129 @@ export function MintForm() {
       
       // Contract details
       const contractAddress = '0x6b65C9aE28c4201695A1046cC03ce4D5689E18C1';
-      const mintFunctionSignature = '0x4a21a2df'; // mint function signature
       
-      // Convert ETH to Wei for the transaction
-      const ethToWei = (eth) => {
-        return '0x' + (BigInt(Math.floor(eth * 1e18))).toString(16);
-      };
-      
-      // Calculate the total price based on mint type
-      const currentPrice = mintType === 'free' ? 0 : DEFAULT_MINT_PRICE;
-      const totalPrice = currentPrice * quantity;
-      const valueInWei = ethToWei(totalPrice);
-      
-      // Encode the function parameters
-      const quantityHex = quantity.toString(16).padStart(64, '0');
-      
-      // Construct the data field with all parameters
-      const data =
-        mintFunctionSignature +
-        '0000000000000000000000000000000000000000000000000000000000000080' +
-        quantityHex.padStart(64, '0') +
-        '0000000000000000000000000000000000000000000000000000000000000000' +
-        '00000000000000000000000000000000000000000000000000000000000000e0' +
-        '0000000000000000000000000000000000000000000000000000000000000000' +
-        '0000000000000000000000000000000000000000000000000000000000000040' +
-        '0000000000000000000000000000000000000000000000000000000000000000' +
-        '0000000000000000000000000000000000000000000000000000000000000001' +
-        '0000000000000000000000000000000000000000000000000000000000000000';
-      
-      console.log(`Minting ${quantity} NFTs for ${totalPrice.toFixed(4)} ETH...`);
-      
-      setStatus({
-        type: STATUS_TYPES.LOADING,
-        message: 'Confirm transaction in your wallet...'
-      });
-      
-      try {
-        const txHash = await frame.sdk.wallet.ethProvider.request({
-          method: 'eth_sendTransaction',
-          params: [{
-            from: walletAddress,
-            to: contractAddress,
-            data: data,
-            value: valueInWei
-          }]
-        });
-        
-        console.log('Transaction hash:', txHash);
-        setTxHash(txHash);
-        
-        const successMessage = quantity > 1 
-          ? `Check your wallet in a few minutes for your new NFTs!` 
-          : `Check your wallet in a few minutes for your new NFT!`;
-          
+      if (mintType === 'free') {
+        // Prepare lists for the API: distribute quantity across eligible lists
+        let remaining = quantity;
+        const lists = eligibleLists
+          .map(list => {
+            const limit = parseInt(list.wallet_limit, 10);
+            if (isNaN(limit) || limit <= 0 || remaining <= 0) return null;
+            const useQty = Math.min(limit, remaining);
+            remaining -= useQty;
+            return useQty > 0 ? { id: list.id, quantity: useQty } : null;
+          })
+          .filter(Boolean);
+        if (lists.length === 0) throw new Error('No eligible invite lists for free mint');
+        const body = {
+          collectionAddress: contractAddress,
+          chainId: 8453,
+          minterAddress: walletAddress,
+          lists,
+          affiliateAddress: '0x0'
+        };
         setStatus({
-          type: STATUS_TYPES.SUCCESS,
-          message: successMessage
+          type: STATUS_TYPES.LOADING,
+          message: 'Generating mint transaction...'
         });
-        
-        // Reset status after 5 seconds
-        setTimeout(() => {
-          if (status.type === STATUS_TYPES.SUCCESS) {
-            setStatus({ type: STATUS_TYPES.NONE, message: '' });
-          }
-        }, 5000);
-      } catch (mintError) {
-        console.error('Error in mint transaction:', mintError);
+        const res = await fetch('/api/generate-mint-tx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to generate mint transaction');
+        }
+        const mintTx = await res.json();
         setStatus({
-          type: STATUS_TYPES.ERROR,
-          message: `Transaction failed: ${mintError.message}`
+          type: STATUS_TYPES.LOADING,
+          message: 'Confirm transaction in your wallet...'
         });
+        try {
+          const txHash = await frame.sdk.wallet.ethProvider.request({
+            method: 'eth_sendTransaction',
+            params: [{
+              from: walletAddress,
+              to: mintTx.to,
+              data: mintTx.data,
+              value: mintTx.value
+            }]
+          });
+          setTxHash(txHash);
+          const successMessage = quantity > 1 
+            ? `Check your wallet in a few minutes for your new NFTs!` 
+            : `Check your wallet in a few minutes for your new NFT!`;
+          setStatus({
+            type: STATUS_TYPES.SUCCESS,
+            message: successMessage
+          });
+          setTimeout(() => {
+            if (status.type === STATUS_TYPES.SUCCESS) {
+              setStatus({ type: STATUS_TYPES.NONE, message: '' });
+            }
+          }, 5000);
+        } catch (mintError) {
+          setStatus({
+            type: STATUS_TYPES.ERROR,
+            message: `Transaction failed: ${mintError.message}`
+          });
+        }
+      } else {
+        // Paid mint (public)
+        const mintFunctionSignature = '0x4a21a2df'; // mint function signature
+        const ethToWei = (eth) => {
+          return '0x' + (BigInt(Math.floor(eth * 1e18))).toString(16);
+        };
+        const totalPrice = DEFAULT_MINT_PRICE * quantity;
+        const valueInWei = ethToWei(totalPrice);
+        const quantityHex = quantity.toString(16).padStart(64, '0');
+        const data =
+          mintFunctionSignature +
+          '0000000000000000000000000000000000000000000000000000000000000080' +
+          quantityHex.padStart(64, '0') +
+          '0000000000000000000000000000000000000000000000000000000000000000' +
+          '00000000000000000000000000000000000000000000000000000000000000e0' +
+          '0000000000000000000000000000000000000000000000000000000000000000' +
+          '0000000000000000000000000000000000000000000000000000000000000040' +
+          '0000000000000000000000000000000000000000000000000000000000000000' +
+          '0000000000000000000000000000000000000000000000000000000000000001' +
+          '0000000000000000000000000000000000000000000000000000000000000000';
+        setStatus({
+          type: STATUS_TYPES.LOADING,
+          message: 'Confirm transaction in your wallet...'
+        });
+        try {
+          const txHash = await frame.sdk.wallet.ethProvider.request({
+            method: 'eth_sendTransaction',
+            params: [{
+              from: walletAddress,
+              to: contractAddress,
+              data: data,
+              value: valueInWei
+            }]
+          });
+          setTxHash(txHash);
+          const successMessage = quantity > 1 
+            ? `Check your wallet in a few minutes for your new NFTs!` 
+            : `Check your wallet in a few minutes for your new NFT!`;
+          setStatus({
+            type: STATUS_TYPES.SUCCESS,
+            message: successMessage
+          });
+          setTimeout(() => {
+            if (status.type === STATUS_TYPES.SUCCESS) {
+              setStatus({ type: STATUS_TYPES.NONE, message: '' });
+            }
+          }, 5000);
+        } catch (mintError) {
+          setStatus({
+            type: STATUS_TYPES.ERROR,
+            message: `Transaction failed: ${mintError.message}`
+          });
+        }
       }
     } catch (error) {
-      console.error('Error minting:', error);
       setStatus({
         type: STATUS_TYPES.ERROR,
         message: `Failed to mint: ${error.message}`
