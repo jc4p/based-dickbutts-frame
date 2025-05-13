@@ -229,6 +229,7 @@ export function MintForm() {
           throw new Error(err.error || 'Failed to generate mint transaction');
         }
         const mintTx = await res.json();
+        
         setStatus({
           type: STATUS_TYPES.LOADING,
           message: 'Confirm transaction in your wallet...'
@@ -244,18 +245,10 @@ export function MintForm() {
             }]
           });
           setTxHash(txHash);
-          const successMessage = quantity > 1 
-            ? `Check your wallet in a few minutes for your new NFTs!` 
-            : `Check your wallet in a few minutes for your new NFT!`;
           setStatus({
-            type: STATUS_TYPES.SUCCESS,
-            message: successMessage
+            type: STATUS_TYPES.LOADING,
+            message: 'Waiting for transaction to be confirmed...'
           });
-          setTimeout(() => {
-            if (status.type === STATUS_TYPES.SUCCESS) {
-              setStatus({ type: STATUS_TYPES.NONE, message: '' });
-            }
-          }, 5000);
         } catch (mintError) {
           setStatus({
             type: STATUS_TYPES.ERROR,
@@ -297,18 +290,10 @@ export function MintForm() {
             }]
           });
           setTxHash(txHash);
-          const successMessage = quantity > 1 
-            ? `Check your wallet in a few minutes for your new NFTs!` 
-            : `Check your wallet in a few minutes for your new NFT!`;
           setStatus({
-            type: STATUS_TYPES.SUCCESS,
-            message: successMessage
+            type: STATUS_TYPES.LOADING,
+            message: 'Waiting for transaction to be confirmed...'
           });
-          setTimeout(() => {
-            if (status.type === STATUS_TYPES.SUCCESS) {
-              setStatus({ type: STATUS_TYPES.NONE, message: '' });
-            }
-          }, 5000);
         } catch (mintError) {
           setStatus({
             type: STATUS_TYPES.ERROR,

@@ -124,6 +124,7 @@ export function MintedNFTs({ txHash }) {
               width={mintedNFTs.length === 1 ? 500 : 300}
               height={mintedNFTs.length === 1 ? 500 : 300}
               className={styles.nftImage}
+              unoptimized={true}
             />
             <p className={styles.tokenId}>#{nft.tokenId}</p>
           </div>
