@@ -9,6 +9,8 @@ import { DebugOverlay } from './DebugOverlay';
 // Default mint price in ETH (fallback)
 const DEFAULT_MINT_PRICE = 0.002;
 const DEFAULT_MAX_QUANTITY = 25;
+const ACCOUNT_REQUEST_TIMEOUT_MS = 15000; // 15 seconds for initial account request
+const MINT_ACCOUNT_REQUEST_TIMEOUT_MS = 30000; // 30 seconds for mint interaction
 
 // Status message types
 const STATUS_TYPES = {
@@ -54,15 +56,22 @@ export function MintForm() {
     async function getInviteListData() {
       console.log('[MintForm] Attempting to get invite list data...');
       setIsLoadingPrice(true);
+      setStatus({ type: STATUS_TYPES.LOADING, message: 'Connecting to wallet...' }); // User feedback
       try {
         console.log('[MintForm] Requesting accounts from Frame SDK...');
-        const accounts = await frame.sdk.wallet.ethProvider.request({
+        const accountsPromise = frame.sdk.wallet.ethProvider.request({
           method: 'eth_requestAccounts'
         });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Wallet connection timed out (15s). Please try again or ensure your wallet is responsive.')), ACCOUNT_REQUEST_TIMEOUT_MS)
+        );
+
+        const accounts = await Promise.race([accountsPromise, timeoutPromise]);
         console.log('[MintForm] Accounts received:', accounts);
         
         if (!accounts || !accounts[0]) {
-          console.warn('[MintForm] No accounts found or access denied.');
+          console.warn('[MintForm] No accounts found or access denied after request.');
+          setStatus({ type: STATUS_TYPES.ERROR, message: 'No wallet account found. Please connect your wallet.' });
           setMintPrice(DEFAULT_MINT_PRICE);
           setMaxQuantity(DEFAULT_MAX_QUANTITY);
           setHasFreeMint(false);
@@ -112,8 +121,10 @@ export function MintForm() {
           setMaxQuantity(DEFAULT_MAX_QUANTITY);
           setHasFreeMint(false);
         }
+        setStatus({ type: STATUS_TYPES.NONE, message: '' }); // Clear status on success
       } catch (error) {
-        console.error('[MintForm] Error in getInviteListData:', error);
+        console.error('[MintForm] Error in getInviteListData (accounts or fetch):', error);
+        setStatus({ type: STATUS_TYPES.ERROR, message: error.message || 'Failed to connect wallet or fetch invite data.' });
         setMintPrice(DEFAULT_MINT_PRICE);
         setMaxQuantity(DEFAULT_MAX_QUANTITY);
         setHasFreeMint(false);
@@ -173,20 +184,22 @@ export function MintForm() {
   const handleMint = async () => {
     console.log(`[MintForm] handleMint started. Mint Type: ${mintType}, Quantity: ${quantity}`);
     setIsMinting(true);
-    setStatus({
-      type: STATUS_TYPES.LOADING,
-      message: 'Connecting to wallet...'
-    });
+    setStatus({ type: STATUS_TYPES.LOADING, message: 'Connecting to wallet for minting...' });
     
     try {
       console.log('[MintForm] Requesting accounts for minting...');
-      const accounts = await frame.sdk.wallet.ethProvider.request({
+      const accountsPromise = frame.sdk.wallet.ethProvider.request({
         method: 'eth_requestAccounts'
       });
+      const mintTimeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Wallet interaction for mint timed out (30s). Please try again.')), MINT_ACCOUNT_REQUEST_TIMEOUT_MS)
+      );
+      const accounts = await Promise.race([accountsPromise, mintTimeoutPromise]);
       console.log('[MintForm] Accounts for minting:', accounts);
+
       if (!accounts || !accounts[0]) {
-        console.error('[MintForm] No wallet connected for minting.');
-        throw new Error('No wallet connected');
+        console.error('[MintForm] No wallet connected for minting after request.');
+        throw new Error('No wallet connected. Please ensure your wallet is connected and try again.');
       }
       const walletAddress = accounts[0];
       console.log('[MintForm] Wallet address for minting:', walletAddress);
@@ -344,10 +357,7 @@ export function MintForm() {
       }
     } catch (error) {
       console.error('[MintForm] General error in handleMint:', error);
-      setStatus({
-        type: STATUS_TYPES.ERROR,
-        message: `Failed to mint: ${error.message}`
-      });
+      setStatus({ type: STATUS_TYPES.ERROR, message: error.message || 'Failed to mint. Please try again.'});
     } finally {
       console.log('[MintForm] handleMint finished. isMinting: false.');
       setIsMinting(false);
