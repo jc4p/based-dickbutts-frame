@@ -7,7 +7,7 @@ import * as frame from '@farcaster/frame-sdk';
 
 export function CollectionDisplay() {
   const [walletAddress, setWalletAddress] = useState(null);
-  const [whitelists, setWhitelists] = useState([]);
+  const [inviteLists, setInviteLists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -30,9 +30,9 @@ export function CollectionDisplay() {
     getWalletAddress();
   }, []);
 
-  // Fetch whitelist data when wallet address changes
+  // Fetch invite list data when wallet address changes
   useEffect(() => {
-    async function fetchWhitelists() {
+    async function fetchInviteLists() {
       if (!walletAddress) return;
       
       setLoading(true);
@@ -41,10 +41,10 @@ export function CollectionDisplay() {
       try {
         const response = await fetch(`/api/invite-lists?wallet=${walletAddress}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch whitelist data');
+          throw new Error('Failed to fetch invite list data');
         }
         const data = await response.json();
-        setWhitelists(data);
+        setInviteLists(data);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -52,7 +52,7 @@ export function CollectionDisplay() {
       }
     }
 
-    fetchWhitelists();
+    fetchInviteLists();
   }, [walletAddress]);
 
   return (
@@ -67,14 +67,14 @@ export function CollectionDisplay() {
       />
       
       {walletAddress && (
-        <div className={styles.whitelistContainer}>
-          {loading && <p>Checking whitelist eligibility...</p>}
+        <div className={styles.inviteListContainer}>
+          {loading && <p>Checking invite list eligibility...</p>}
           {error && <p className={styles.error}>Error: {error}</p>}
-          {!loading && !error && whitelists.length > 0 && (
-            <div className={styles.whitelistInfo}>
+          {!loading && !error && inviteLists.length > 0 && (
+            <div className={styles.inviteListInfo}>
               <h3>Your Free Mint Eligibility:</h3>
-              {whitelists.map((list) => (
-                <div key={list.id} className={styles.whitelistItem}>
+              {inviteLists.map((list) => (
+                <div key={list.id} className={styles.inviteListItem}>
                   <p>List: {list.name}</p>
                   <p>Mints Remaining: {list.mints_remaining}</p>
                 </div>
