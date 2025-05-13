@@ -16,7 +16,7 @@ export const metadata = {
           name: "Based Dickbutts",
           url: `${process.env.NEXT_PUBLIC_APP_URL}`,
           splashImageUrl: `${process.env.NEXT_PUBLIC_APP_URL}/collection-square.gif`,
-          splashBackgroundColor: "#FFFFFF"
+          splashBackgroundColor: "#010BFF"
         }
       }
     })

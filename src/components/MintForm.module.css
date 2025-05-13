@@ -155,16 +155,45 @@
 .shareButton {
   width: 100%;
   padding: 12px 24px;
-  background-color: #6442BF;
-  color: var(--background);
-  border: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border: 2px solid var(--primary);
   border-radius: 25px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .shareButton:hover {
-  background-color: #5339a3;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--primary-dark);
+}
+
+.mintTypeSelector {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.mintTypeButton {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: transparent;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mintTypeButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mintTypeButton.active {
+  background: var(--primary);
+  color: var(--background);
 }

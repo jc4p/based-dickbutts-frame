@@ -25,6 +25,8 @@ export function MintForm() {
   const [mintPrice, setMintPrice] = useState(DEFAULT_MINT_PRICE);
   const [isLoadingPrice, setIsLoadingPrice] = useState(true);
   const [maxQuantity, setMaxQuantity] = useState(DEFAULT_MAX_QUANTITY);
+  const [hasFreeMint, setHasFreeMint] = useState(false);
+  const [mintType, setMintType] = useState('free'); // 'free' or 'paid'
   const sliderRef = useRef(null);
 
   // Fetch invite list price and max quantity when wallet is connected
@@ -38,6 +40,7 @@ export function MintForm() {
         if (!accounts || !accounts[0]) {
           setMintPrice(DEFAULT_MINT_PRICE);
           setMaxQuantity(DEFAULT_MAX_QUANTITY);
+          setHasFreeMint(false);
           setIsLoadingPrice(false);
           return;
         }
@@ -64,18 +67,22 @@ export function MintForm() {
           if (maxWalletLimit === -Infinity || maxWalletLimit === 0) {
             setMintPrice(DEFAULT_MINT_PRICE);
             setMaxQuantity(DEFAULT_MAX_QUANTITY);
+            setHasFreeMint(false);
           } else {
+            setHasFreeMint(true);
             setMintPrice(0);
             setMaxQuantity(maxWalletLimit);
           }
         } else {
           setMintPrice(DEFAULT_MINT_PRICE);
           setMaxQuantity(DEFAULT_MAX_QUANTITY);
+          setHasFreeMint(false);
         }
       } catch (error) {
         console.error('Error fetching invite list data:', error);
         setMintPrice(DEFAULT_MINT_PRICE);
         setMaxQuantity(DEFAULT_MAX_QUANTITY);
+        setHasFreeMint(false);
       } finally {
         setIsLoadingPrice(false);
       }
@@ -179,8 +186,9 @@ export function MintForm() {
         return '0x' + (BigInt(Math.floor(eth * 1e18))).toString(16);
       };
       
-      // Calculate the total price
-      const totalPrice = mintPrice * quantity;
+      // Calculate the total price based on mint type
+      const currentPrice = mintType === 'free' ? 0 : DEFAULT_MINT_PRICE;
+      const totalPrice = currentPrice * quantity;
       const valueInWei = ethToWei(totalPrice);
       
       // Encode the function parameters
@@ -256,7 +264,24 @@ export function MintForm() {
   return (
     <>
       <div className={styles.mintForm}>
-        {maxQuantity > 1 && (
+        {hasFreeMint && (
+          <div className={styles.mintTypeSelector}>
+            <button
+              className={`${styles.mintTypeButton} ${mintType === 'free' ? styles.active : ''}`}
+              onClick={() => setMintType('free')}
+            >
+              Free Mint
+            </button>
+            <button
+              className={`${styles.mintTypeButton} ${mintType === 'paid' ? styles.active : ''}`}
+              onClick={() => setMintType('paid')}
+            >
+              Public Mint
+            </button>
+          </div>
+        )}
+
+        {(mintType === 'paid' || (mintType === 'free' && maxQuantity > 1)) && (
           <div className={styles.quantitySelector}>
             <label htmlFor="quantity">Quantity: {quantity}</label>
             <input
@@ -265,7 +290,7 @@ export function MintForm() {
               id="quantity"
               name="quantity"
               min="1"
-              max={maxQuantity}
+              max={mintType === 'free' ? maxQuantity : DEFAULT_MAX_QUANTITY}
               value={quantity}
               onChange={handleSliderChange}
               className={styles.slider}
@@ -273,7 +298,7 @@ export function MintForm() {
             />
             <div className={styles.sliderValues}>
               <span>1</span>
-              <span>{maxQuantity}</span>
+              <span>{mintType === 'free' ? maxQuantity : DEFAULT_MAX_QUANTITY}</span>
             </div>
           </div>
         )}
@@ -285,8 +310,8 @@ export function MintForm() {
         >
           {isMinting ? 'Minting...' : 
            isLoadingPrice ? 'Loading...' :
-           mintPrice === 0 ? `Mint - Free` :
-           `Mint - ${(mintPrice * quantity).toFixed(4)} ETH`}
+           mintType === 'free' ? `Mint - Free` :
+           `Mint - ${(DEFAULT_MINT_PRICE * quantity).toFixed(4)} ETH`}
         </button>
         
         {status.type !== STATUS_TYPES.NONE && (
