@@ -126,7 +126,7 @@ export function MintedNFTs({ txHash }) {
               className={styles.nftImage}
               unoptimized={true}
             />
-            <p className={styles.tokenId}>#{nft.tokenId}</p>
+            <p className={styles.tokenId}>Based Dickbutts #{nft.tokenId}</p>
           </div>
         ))}
       </div>
