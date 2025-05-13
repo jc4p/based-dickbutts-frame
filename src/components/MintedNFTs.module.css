@@ -15,11 +15,12 @@
   display: grid;
   gap: 2rem;
   justify-content: center;
+  margin-bottom: 2rem;
 }
 
 .grid.single {
   max-width: 500px;
-  margin: 0 auto;
+  margin: 0 auto 2rem;
 }
 
 .grid:not(.single) {
@@ -66,4 +67,29 @@
   background: var(--error-bg);
   border-radius: var(--radius-md);
   margin: 1rem 0;
+}
+
+.shareButton {
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.shareButton:hover {
+  background: var(--primary-hover);
+}
+
+.shareButton:disabled {
+  background: var(--disabled);
+  cursor: not-allowed;
 } 

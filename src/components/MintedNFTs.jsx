@@ -5,6 +5,7 @@ import Image from 'next/image';
 import styles from './MintedNFTs.module.css';
 import { createPublicClient, http, parseAbiItem } from 'viem';
 import { base } from 'viem/chains';
+import * as frame from '@farcaster/frame-sdk';
 
 const CONTRACT_ADDRESS = '0x6b65C9aE28c4201695A1046cC03ce4D5689E18C1';
 
@@ -18,6 +19,29 @@ export function MintedNFTs({ txHash }) {
   const [mintedNFTs, setMintedNFTs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const handleOpenUrl = (urlAsString) => {
+    try {
+      // Try with string parameter first
+      frame.sdk.actions.openUrl(urlAsString);
+    } catch (error) {
+      try {
+        // If string parameter fails, try with object parameter
+        frame.sdk.actions.openUrl({ url: urlAsString });
+      } catch (secondError) {
+        console.error('Failed to open URL:', secondError);
+      }
+    }
+  };
+
+  const handleShareOnWarpcast = () => {
+    const targetText = mintedNFTs.length > 1 
+      ? `Just minted ${mintedNFTs.length} Based Dickbutts NFTs!` 
+      : `Just minted Based Dickbutt #${mintedNFTs[0].tokenId}!`;
+    const targetURL = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    const finalUrl = `https://warpcast.com/~/compose?text=${encodeURIComponent(targetText)}&embeds[]=${encodeURIComponent(targetURL)}`;
+    handleOpenUrl(finalUrl);
+  };
 
   useEffect(() => {
     if (!txHash) return;
@@ -105,6 +129,12 @@ export function MintedNFTs({ txHash }) {
           </div>
         ))}
       </div>
+      <button 
+        className={styles.shareButton} 
+        onClick={handleShareOnWarpcast}
+      >
+        Share
+      </button>
     </div>
   );
 } 
