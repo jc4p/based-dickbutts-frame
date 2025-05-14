@@ -285,8 +285,7 @@ export function MintForm() {
           const txParams = {
             from: walletAddress,
             to: mintTx.to,
-            data: mintTx.data,
-            ...(mintTx.value != null && mintTx.value !== '0x0' ? { value: mintTx.value } : {})
+            data: mintTx.data
           };
           console.log('[MintForm] Sending free mint transaction with params:', txParams);
           const currentTxHash = await frame.sdk.wallet.ethProvider.request({
