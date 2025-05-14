@@ -38,15 +38,25 @@ export function MintForm() {
     console.log('[MintForm] Component mounted / initialized');
   }, []);
 
-  // Scroll to MintedNFTs when txHash is set
+  // Scroll to MintedNFTs when txHash is set and update status
   useEffect(() => {
     console.log('[MintForm] txHash changed:', txHash);
-    if (txHash && mintedNFTsRef.current) {
-      console.log('[MintForm] Scrolling to MintedNFTs section.');
-      const timer = setTimeout(() => {
-        mintedNFTsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 300); // Short delay to ensure rendering
-      return () => clearTimeout(timer);
+    if (txHash) {
+      // Update status message first
+      console.log('[MintForm] Setting congrats message.');
+      setStatus({
+        type: STATUS_TYPES.SUCCESS, // Using SUCCESS type, or could be a custom INFO type
+        message: 'Congrats! Scroll down to see your new NFT(s)!'
+      });
+
+      // Then scroll if the ref is available
+      if (mintedNFTsRef.current) {
+        console.log('[MintForm] Scrolling to MintedNFTs section.');
+        const timer = setTimeout(() => {
+          mintedNFTsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300); // Short delay to ensure rendering and message update visibility
+        return () => clearTimeout(timer);
+      }
     }
   }, [txHash]);
 
@@ -277,10 +287,6 @@ export function MintForm() {
         const mintTx = await res.json();
         console.log('[MintForm] Received mintTransaction from API:', mintTx);
         
-        setStatus({
-          type: STATUS_TYPES.LOADING,
-          message: 'Confirm transaction in your wallet...'
-        });
         try {
           const txParams = {
             from: walletAddress,
@@ -294,10 +300,6 @@ export function MintForm() {
           });
           console.log('[MintForm] Free mint transaction sent. TxHash:', currentTxHash);
           setTxHash(currentTxHash);
-          setStatus({
-            type: STATUS_TYPES.LOADING,
-            message: 'Waiting for transaction to be confirmed...'
-          });
         } catch (mintError) {
           console.error('[MintForm] Free mint transaction error:', mintError);
           setStatus({
@@ -343,10 +345,6 @@ export function MintForm() {
           });
           console.log('[MintForm] Paid mint transaction sent. TxHash:', currentTxHash);
           setTxHash(currentTxHash);
-          setStatus({
-            type: STATUS_TYPES.LOADING,
-            message: 'Waiting for transaction to be confirmed...'
-          });
         } catch (mintError) {
           console.error('[MintForm] Paid mint transaction error:', mintError);
           setStatus({
