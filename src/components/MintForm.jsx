@@ -282,15 +282,16 @@ export function MintForm() {
           message: 'Confirm transaction in your wallet...'
         });
         try {
-          console.log('[MintForm] Sending free mint transaction with params:', { from: walletAddress, to: mintTx.to, data: mintTx.data, value: mintTx.value });
+          const txParams = {
+            from: walletAddress,
+            to: mintTx.to,
+            data: mintTx.data,
+            ...(mintTx.value != null && mintTx.value !== '0x0' ? { value: mintTx.value } : {})
+          };
+          console.log('[MintForm] Sending free mint transaction with params:', txParams);
           const currentTxHash = await frame.sdk.wallet.ethProvider.request({
             method: 'eth_sendTransaction',
-            params: [{
-              from: walletAddress,
-              to: mintTx.to,
-              data: mintTx.data,
-              value: mintTx.value
-            }]
+            params: [txParams]
           });
           console.log('[MintForm] Free mint transaction sent. TxHash:', currentTxHash);
           setTxHash(currentTxHash);
