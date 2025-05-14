@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import styles from './MintForm.module.css';
 import * as frame from '@farcaster/frame-sdk';
 import { MintedNFTs } from './MintedNFTs';
-import { DebugOverlay } from './DebugOverlay';
 
 // Default mint price in ETH (fallback)
 const DEFAULT_MINT_PRICE = 0.002;
@@ -364,7 +363,6 @@ export function MintForm() {
 
   return (
     <>
-      <DebugOverlay />
       <div className={styles.mintForm}>
         {hasFreeMint && (
           <div className={styles.mintTypeSelector}>
