@@ -84,6 +84,7 @@ export function MintForm() {
           setMintPrice(DEFAULT_MINT_PRICE);
           setMaxQuantity(DEFAULT_MAX_QUANTITY);
           setHasFreeMint(false);
+          setMintType('paid'); // Ensure mintType is 'paid'
           setEligibleLists([]);
           return;
         }
@@ -118,6 +119,7 @@ export function MintForm() {
             setMintPrice(DEFAULT_MINT_PRICE);
             setMaxQuantity(DEFAULT_MAX_QUANTITY);
             setHasFreeMint(false);
+            setMintType('paid'); // Ensure mintType is 'paid'
           } else {
             console.log('[MintForm] Valid free mints found. Max quantity for free mint:', maxWalletLimit);
             setHasFreeMint(true);
@@ -129,6 +131,7 @@ export function MintForm() {
           setMintPrice(DEFAULT_MINT_PRICE);
           setMaxQuantity(DEFAULT_MAX_QUANTITY);
           setHasFreeMint(false);
+          setMintType('paid'); // Ensure mintType is 'paid'
         }
         setStatus({ type: STATUS_TYPES.NONE, message: '' }); // Clear status on success
       } catch (error) {
@@ -137,6 +140,7 @@ export function MintForm() {
         setMintPrice(DEFAULT_MINT_PRICE);
         setMaxQuantity(DEFAULT_MAX_QUANTITY);
         setHasFreeMint(false);
+        setMintType('paid'); // Ensure mintType is 'paid'
         setEligibleLists([]);
       } finally {
         console.log('[MintForm] Finished getInviteListData. isLoadingPrice: false.');
