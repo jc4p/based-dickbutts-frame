@@ -6,7 +6,7 @@ import * as frame from '@farcaster/frame-sdk';
 import { MintedNFTs } from './MintedNFTs';
 
 // Default mint price in ETH (fallback)
-const DEFAULT_MINT_PRICE = 0.002;
+const DEFAULT_MINT_PRICE = 0.001;
 const DEFAULT_MAX_QUANTITY = 25;
 const ACCOUNT_REQUEST_TIMEOUT_MS = 15000; // 15 seconds for initial account request
 const MINT_ACCOUNT_REQUEST_TIMEOUT_MS = 30000; // 30 seconds for mint interaction
